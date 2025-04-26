@@ -7,9 +7,7 @@ class SQLite3::TestCase
     if RbConfig::CONFIG["host_os"] =~ /darwin/i
       skip_tests << "SQLite3::TestDatabase#test_load_extension_is_defined_on_expected_platforms"
     end
-    if stress?
-      skip_tests << "SQLite3::TestDatabase#test_function_gc_segfault"
-    end
+    skip_tests << "SQLite3::TestDatabase#test_function_gc_segfault" if stress?
     skip if skip_tests.include?("#{self.class.name}##{name}")
 
     GC.stress = true if stress?
