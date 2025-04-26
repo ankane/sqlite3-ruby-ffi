@@ -221,7 +221,7 @@ module SQLite3
         require_open_db
 
         err_msg = ::FFI::MemoryPointer.new(:pointer)
-        status = FFI::CApi.sqlite3_load_extension(@db, FFI.string_value(file), 0, err_msg)
+        status = FFI::CApi.sqlite3_load_extension(@db, FFI.string_value(file), nil, err_msg)
         FFI.check_msg(@db, status, err_msg)
         self
       end

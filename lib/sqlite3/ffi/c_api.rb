@@ -204,7 +204,7 @@ module SQLite3
       end
 
       HAVE_SQLITE3_LOAD_EXTENSION = begin
-        attach_function :sqlite3_load_extension, [:pointer, :string, :string, :pointer], :int
+        attach_function :sqlite3_load_extension, [:pointer, :string, :pointer, :pointer], :int
         true
       rescue ::FFI::NotFoundError
         false
