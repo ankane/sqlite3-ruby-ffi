@@ -10,10 +10,6 @@ class SQLite3::TestCase
     if stress?
       skip_tests << "SQLite3::TestDatabase#test_function_gc_segfault"
     end
-    # TODO report bug
-    if RUBY_ENGINE == "truffleruby"
-      skip_tests << "IntegrationStatementTestCase#test_long_running_statements_get_interrupted_when_statement_timeout_set"
-    end
     skip if skip_tests.include?("#{self.class.name}##{name}")
 
     GC.stress = true if stress?

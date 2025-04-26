@@ -56,6 +56,7 @@ module SQLite3
       current_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       if ctx.instance_variable_get(:@stmt_deadline).nil?
         ctx.instance_variable_set(:@stmt_deadline, current_time)
+        0
       elsif current_time >= ctx.instance_variable_get(:@stmt_deadline)
         1
       else
