@@ -15,11 +15,11 @@ Add this line to your Gemfile:
 gem "sqlite3-ffi"
 ```
 
-And use it the exact same way as the sqlite3 gem.
+And use it the same way as the sqlite3 gem.
 
 ## Why FFI for JRuby?
 
-I tried [JDBC](https://github.com/xerial/sqlite-jdbc), [JNI](https://sqlite.org/src/dir/ext/jni), and FFI. Since SQLite is written in C, all three approaches eventually call C, but FFI provides the most compatibility.
+I tried [JDBC](https://github.com/xerial/sqlite-jdbc), [JNI](https://sqlite.org/src/dir/ext/jni), and FFI. Since SQLite is written in C, all three approaches eventually call C, and FFI provides the most compatibility.
 
 ## Credits
 
