@@ -1,4 +1,4 @@
-## 0.1.1 (unreleased)
+## 0.1.1 (2025-04-26)
 
 - Fixed error with `load_extension` method
 
