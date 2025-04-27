@@ -1,6 +1,6 @@
 # sqlite3-ruby-ffi
 
-:tada: A drop-in replacement for [sqlite3](https://github.com/sparklemotion/sqlite3-ruby) for JRuby
+:tada: A drop-in replacement for the [sqlite3](https://github.com/sparklemotion/sqlite3-ruby) gem for JRuby
 
 - Passes > 99% of the sqlite3 test suite
 - Works with Active Record without a custom adapter
