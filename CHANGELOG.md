@@ -1,3 +1,7 @@
+## 0.1.2 (unreleased)
+
+- Improved compatibility
+
 ## 0.1.1 (2025-04-26)
 
 - Fixed error with `load_extension` method
