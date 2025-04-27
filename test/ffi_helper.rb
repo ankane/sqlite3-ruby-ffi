@@ -1,8 +1,7 @@
 class SQLite3::TestCase
   def before_setup
     skip_tests = [
-      "SQLite3::TestDiscardDatabase#test_fork_does_not_discard_readonly_connections",
-      "SQLite3::TestStatement#test_column_names_are_deduped"
+      "SQLite3::TestDiscardDatabase#test_fork_does_not_discard_readonly_connections"
     ]
     if RbConfig::CONFIG["host_os"] =~ /darwin/i
       skip_tests << "SQLite3::TestDatabase#test_load_extension_is_defined_on_expected_platforms"

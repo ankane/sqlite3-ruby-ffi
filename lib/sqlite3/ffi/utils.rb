@@ -38,9 +38,8 @@ module SQLite3
       end
     end
 
-    # TODO intern
     def self.interned_utf8_cstr(str)
-      str.freeze
+      -str
     end
 
     def self.string_value(obj)
