@@ -1,11 +1,11 @@
-# sqlite3-ffi
+# sqlite3-ruby-ffi
 
 :tada: A drop-in replacement for [sqlite3](https://github.com/sparklemotion/sqlite3-ruby) for JRuby
 
 - Passes 99% of the sqlite3 test suite
 - Works with Active Record without a custom adapter
 
-[![Build Status](https://github.com/ankane/sqlite3-ffi/actions/workflows/build.yml/badge.svg)](https://github.com/ankane/sqlite3-ffi/actions)
+[![Build Status](https://github.com/ankane/sqlite3-ruby-ffi/actions/workflows/build.yml/badge.svg)](https://github.com/ankane/sqlite3-ruby-ffi/actions)
 
 ## Installation
 
@@ -34,22 +34,22 @@ The code in `lib` and `test` is an exact copy, plus some additional files:
 
 ## History
 
-View the [changelog](https://github.com/ankane/sqlite3-ffi/blob/master/CHANGELOG.md)
+View the [changelog](https://github.com/ankane/sqlite3-ruby-ffi/blob/master/CHANGELOG.md)
 
 ## Contributing
 
 Everyone is encouraged to help improve this project. Here are a few ways you can help:
 
-- [Report bugs](https://github.com/ankane/sqlite3-ffi/issues)
-- Fix bugs and [submit pull requests](https://github.com/ankane/sqlite3-ffi/pulls)
+- [Report bugs](https://github.com/ankane/sqlite3-ruby-ffi/issues)
+- Fix bugs and [submit pull requests](https://github.com/ankane/sqlite3-ruby-ffi/pulls)
 - Write, clarify, or fix documentation
 - Suggest or add new features
 
 To get started with development:
 
 ```sh
-git clone https://github.com/ankane/sqlite3-ffi.git
-cd sqlite3-ffi
+git clone https://github.com/ankane/sqlite3-ruby-ffi.git
+cd sqlite3-ruby-ffi
 bundle install
 bundle exec rake test
 ```

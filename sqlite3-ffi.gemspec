@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name          = "sqlite3-ffi"
   spec.version       = SQLite3::FFI::VERSION
   spec.summary       = "A drop-in replacement for sqlite3 for JRuby"
-  spec.homepage      = "https://github.com/ankane/sqlite3-ffi"
+  spec.homepage      = "https://github.com/ankane/sqlite3-ruby-ffi"
   spec.license       = "BSD-3-Clause"
 
   spec.authors       = ["Jamis Buck", "Luis Lavena", "Aaron Patterson", "Mike Dalessio", "Andrew Kane"]
