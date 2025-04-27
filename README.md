@@ -2,7 +2,7 @@
 
 :tada: A drop-in replacement for [sqlite3](https://github.com/sparklemotion/sqlite3-ruby) for JRuby
 
-- Passes 99% of the sqlite3 test suite
+- Passes > 99% of the sqlite3 test suite
 - Works with Active Record without a custom adapter
 
 [![Build Status](https://github.com/ankane/sqlite3-ruby-ffi/actions/workflows/build.yml/badge.svg)](https://github.com/ankane/sqlite3-ruby-ffi/actions)
