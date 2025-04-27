@@ -168,8 +168,8 @@ module SQLite3
       end
     end
 
-    def discard_db(db)
-      FFI::CApi.sqlite3_db_release_memory(db)
+    def discard_db
+      FFI::CApi.sqlite3_db_release_memory(@db)
       # TODO sqlite3_file_control
       @db = nil
       @discarded = true
@@ -181,7 +181,7 @@ module SQLite3
           FFI::CApi.sqlite3_close_v2(@db)
           @db = nil
         else
-          discard_db(@db)
+          discard_db
         end
       end
     end
@@ -211,7 +211,7 @@ module SQLite3
     end
 
     def discard
-      discard_db(@db)
+      discard_db
       @aggregators = nil
       self
     end
