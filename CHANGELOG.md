@@ -1,4 +1,4 @@
-## 0.1.2 (unreleased)
+## 0.1.2 (2025-04-27)
 
 - Improved compatibility
 
