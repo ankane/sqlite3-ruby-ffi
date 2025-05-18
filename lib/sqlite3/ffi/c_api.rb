@@ -4,7 +4,15 @@ module SQLite3
       extend ::FFI::Library
 
       # TODO vendor sqlite3
-      ffi_lib "sqlite3"
+      libs = ["sqlite3"]
+      if RbConfig::CONFIG["host_os"] =~ /darwin/i
+        if RbConfig::CONFIG["host_cpu"] =~ /arm|aarch64/i
+          libs.unshift("/opt/homebrew/opt/sqlite3/lib/libsqlite3.dylib")
+        else
+          libs.unshift("/usr/local/opt/sqlite3/lib/libsqlite3.dylib")
+        end
+      end
+      ffi_lib libs
 
       SQLITE_OK         =  0
       SQLITE_ERROR      =  1
