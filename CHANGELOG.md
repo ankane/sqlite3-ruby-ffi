@@ -1,7 +1,3 @@
-## 0.1.3 (unreleased)
-
-- Prefer SQLite from Homebrew on Mac
-
 ## 0.1.2 (2025-04-27)
 
 - Improved compatibility
