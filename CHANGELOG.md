@@ -1,3 +1,7 @@
+## 0.1.4 (unreleased)
+
+- Synced with sqlite3-ruby 2.7.0
+
 ## 0.1.3 (2025-06-07)
 
 - Prefer SQLite from Homebrew on Mac
