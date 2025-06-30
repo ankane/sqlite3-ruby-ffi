@@ -19,7 +19,7 @@ module SQLite3
       inst_ptr = CApi.sqlite3_aggregate_context(ctx, 8)
 
       if inst_ptr.null?
-        fatal "SQLite is out-of-merory"
+        fatal "SQLite is out-of-memory"
       end
 
       if inst_ptr.read_pointer.null?
