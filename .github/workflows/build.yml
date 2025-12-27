@@ -11,12 +11,12 @@ jobs:
             os: ubuntu-latest
           - ruby: jruby-9.4.12.0
             os: macos-latest
-          - ruby: 3.4
+          - ruby: "4.0"
             os: ubuntu-latest
-          - ruby: truffleruby-24.2.0
+          - ruby: truffleruby-25.0.0
             os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
