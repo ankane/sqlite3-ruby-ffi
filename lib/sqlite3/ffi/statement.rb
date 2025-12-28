@@ -178,6 +178,23 @@ module SQLite3
       FFI::CApi.sqlite3_bind_parameter_count(@stmt)
     end
 
+    def named_params
+      require_live_db
+      require_open_stmt
+
+      param_count = FFI::CApi.sqlite3_bind_parameter_count(@stmt)
+      params = []
+
+      1.upto(param_count) do |i|
+        name = FFI::CApi.sqlite3_bind_parameter_name(@stmt, i)
+        if name && name[0] != "?"
+          param = FFI.interned_utf8_cstr(name[1..])
+          params << param
+        end
+      end
+      params.freeze
+    end
+
     STMT_STAT_SYMBOLS = {
       fullscan_steps: FFI::CApi::SQLITE_STMTSTATUS_FULLSCAN_STEP,
       sorts: FFI::CApi::SQLITE_STMTSTATUS_SORT,

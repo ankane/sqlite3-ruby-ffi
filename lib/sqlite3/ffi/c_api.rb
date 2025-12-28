@@ -141,6 +141,7 @@ module SQLite3
       attach_function :sqlite3_bind_null, [:pointer, :int], :int
       attach_function :sqlite3_bind_parameter_count, [:pointer], :int
       attach_function :sqlite3_bind_parameter_index, [:pointer, :string], :int
+      attach_function :sqlite3_bind_parameter_name, [:pointer, :int], :string
       attach_function :sqlite3_bind_text, [:pointer, :int, :string, :int, :pointer], :int
       attach_function :sqlite3_bind_text16, [:pointer, :int, :pointer, :int, :pointer], :int
       attach_function :sqlite3_busy_handler, [:pointer, :pointer, :pointer], :int
