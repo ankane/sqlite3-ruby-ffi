@@ -1,3 +1,7 @@
+## 0.1.6 (unreleased)
+
+- Fixed memory leak with `expanded_sql` method
+
 ## 0.1.5 (2026-01-02)
 
 - Synced with sqlite3-ruby 2.9.0
