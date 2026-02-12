@@ -218,6 +218,7 @@ module SQLite3
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open_v2(FFI.string_value(file), db, flags, zvfs)
       @db = db.read_pointer
+      ObjectSpace.define_finalizer(@db, proc { close_or_discard_db })
       FFI.check(@db, status)
       if (flags & FFI::CApi::SQLITE_OPEN_READONLY) != 0
         @readonly = true
@@ -255,6 +256,7 @@ module SQLite3
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open16(utf16_string_value_ptr(file), db)
       @db = db.read_pointer
+      ObjectSpace.define_finalizer(@db, proc { close_or_discard_db })
       FFI.check(@db, status)
       status
     end

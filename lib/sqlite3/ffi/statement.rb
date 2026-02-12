@@ -11,6 +11,7 @@ module SQLite3
       FFI.check_prepare(db, status, sql)
 
       @stmt = stmt.read_pointer
+      ObjectSpace.define_finalizer(@stmt, proc { FFI::CApi.sqlite3_finalize(@stmt) unless @stmt&.null? })
       @db.instance_variable_set(:@stmt_deadline, nil)
 
       tail.read_pointer.read_string.force_encoding(Encoding::UTF_8)
