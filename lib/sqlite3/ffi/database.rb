@@ -214,6 +214,7 @@ module SQLite3
     end
 
     def open_v2(file, flags, zvfs)
+      @owner = Process.pid
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open_v2(FFI.string_value(file), db, flags, zvfs)
       @db = db.read_pointer
@@ -221,7 +222,6 @@ module SQLite3
       if (flags & FFI::CApi::SQLITE_OPEN_READONLY) != 0
         @readonly = true
       end
-      @owner = Process.pid
       self
     end
 
@@ -251,6 +251,7 @@ module SQLite3
     end
 
     def open16(file)
+      @owner = Process.pid
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open16(utf16_string_value_ptr(file), db)
       @db = db.read_pointer
