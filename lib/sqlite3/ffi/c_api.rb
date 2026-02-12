@@ -129,6 +129,9 @@ module SQLite3
       SQLITE_TRACE_ROW     = 0x04
       SQLITE_TRACE_CLOSE   = 0x08
 
+      SQLITE_FCNTL_FILE_POINTER    = 7
+      SQLITE_FCNTL_JOURNAL_POINTER = 28
+
       attach_function :sqlite3_aggregate_context, [:pointer, :int], :pointer
       attach_function :sqlite3_backup_finish, [:pointer], :int
       attach_function :sqlite3_backup_init, [:pointer, :string, :pointer, :string], :pointer
@@ -171,7 +174,7 @@ module SQLite3
       attach_function :sqlite3_exec, [:pointer, :string, :pointer, :pointer, :pointer], :int
       attach_function :sqlite3_expanded_sql, [:pointer], :string
       attach_function :sqlite3_extended_result_codes, [:pointer, :int], :int
-      attach_function :sqlite3_file_control, [:pointer, :string, :int, :pointer], :int
+      attach_function :sqlite3_file_control, [:pointer, :pointer, :int, :pointer], :int
       attach_function :sqlite3_finalize, [:pointer], :int
       attach_function :sqlite3_free, [:pointer], :void
       attach_function :sqlite3_get_autocommit, [:pointer], :int
@@ -204,6 +207,13 @@ module SQLite3
       attach_function :sqlite3_value_int64, [:pointer], :int64
       attach_function :sqlite3_value_text, [:pointer], :pointer
       attach_function :sqlite3_value_type, [:pointer], :int
+
+      HAVE_SQLITE3_DB_NAME = begin
+        attach_function :sqlite3_db_name, [:pointer, :int], :pointer
+        true
+      rescue ::FFI::NotFoundError
+        false
+      end
 
       HAVE_SQLITE3_ENABLE_LOAD_EXTENSION = begin
         attach_function :sqlite3_enable_load_extension, [:pointer, :int], :int

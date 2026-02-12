@@ -169,8 +169,31 @@ module SQLite3
     end
 
     def discard_db
+      sfile = ::FFI::MemoryPointer.new(:pointer)
+
       FFI::CApi.sqlite3_db_release_memory(@db)
-      # TODO sqlite3_file_control
+
+      if FFI::CApi::HAVE_SQLITE3_DB_NAME
+        j_db = 0
+        while !(db_name = FFI::CApi.sqlite3_db_name(@db, j_db)).null?
+          status = FFI::CApi.sqlite3_file_control(@db, db_name, FFI::CApi::SQLITE_FCNTL_FILE_POINTER, sfile)
+          if status == 0
+            # TODO
+          end
+          j_db += 1
+        end
+      else
+        status = FFI::CApi.sqlite3_file_control(@db, nil, FFI::CApi::SQLITE_FCNTL_FILE_POINTER, sfile)
+        if status == 0
+          # TODO
+        end
+      end
+
+      status = FFI::CApi.sqlite3_file_control(@db, nil, FFI::CApi::SQLITE_FCNTL_JOURNAL_POINTER, sfile)
+      if status == 0
+        # TODO
+      end
+
       @db = nil
       @discarded = true
     end
