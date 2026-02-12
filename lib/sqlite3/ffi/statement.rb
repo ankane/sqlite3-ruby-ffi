@@ -239,7 +239,11 @@ module SQLite3
       require_live_db
       require_open_stmt
 
-      FFI::CApi.sqlite3_expanded_sql(@stmt).force_encoding(Encoding::UTF_8).freeze
+      expanded_sql = FFI::CApi.sqlite3_expanded_sql(@stmt)
+      rb_expanded_sql = expanded_sql.read_string.force_encoding(Encoding::UTF_8).freeze
+      FFI::CApi.sqlite3_free(expanded_sql)
+
+      rb_expanded_sql
     end
 
     private

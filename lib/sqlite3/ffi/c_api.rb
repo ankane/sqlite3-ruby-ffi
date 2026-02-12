@@ -172,7 +172,7 @@ module SQLite3
       attach_function :sqlite3_errmsg, [:pointer], :string
       attach_function :sqlite3_error_offset, [:pointer], :int
       attach_function :sqlite3_exec, [:pointer, :string, :pointer, :pointer, :pointer], :int
-      attach_function :sqlite3_expanded_sql, [:pointer], :string
+      attach_function :sqlite3_expanded_sql, [:pointer], :pointer
       attach_function :sqlite3_extended_result_codes, [:pointer, :int], :int
       attach_function :sqlite3_file_control, [:pointer, :pointer, :int, :pointer], :int
       attach_function :sqlite3_finalize, [:pointer], :int
