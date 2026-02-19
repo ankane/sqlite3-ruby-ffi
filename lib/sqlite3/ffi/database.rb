@@ -201,7 +201,7 @@ module SQLite3
     def close_or_discard_db
       unless @db.nil?
         if @readonly || @owner == Process.pid
-          FFI::CApi.sqlite3_close_v2(@db)
+          @db.free
           @db = nil
         else
           discard_db
@@ -218,6 +218,7 @@ module SQLite3
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open_v2(FFI.string_value(file), db, flags, zvfs)
       @db = db.read_pointer
+      @db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
       FFI.check(@db, status)
       if (flags & FFI::CApi::SQLITE_OPEN_READONLY) != 0
         @readonly = true
@@ -254,7 +255,7 @@ module SQLite3
       @owner = Process.pid
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open16(utf16_string_value_ptr(file), db)
-      @db = db.read_pointer
+      @db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
       FFI.check(@db, status)
       status
     end

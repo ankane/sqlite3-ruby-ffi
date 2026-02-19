@@ -1,6 +1,6 @@
 ## 0.1.6 (unreleased)
 
-- Fixed memory leak with `expanded_sql` method
+- Fixed memory leaks
 
 ## 0.1.5 (2026-01-02)
 

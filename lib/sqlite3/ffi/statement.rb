@@ -10,7 +10,7 @@ module SQLite3
       status = FFI::CApi.sqlite3_prepare_v2(db, sql, sql.bytesize, stmt, tail)
       FFI.check_prepare(db, status, sql)
 
-      @stmt = stmt.read_pointer
+      @stmt = ::FFI::AutoPointer.new(stmt.read_pointer, FFI::CApi.method(:sqlite3_finalize))
       @db.instance_variable_set(:@stmt_deadline, nil)
 
       tail.read_pointer.read_string.force_encoding(Encoding::UTF_8)
@@ -19,7 +19,7 @@ module SQLite3
     def close
       require_open_stmt
 
-      FFI::CApi.sqlite3_finalize(@stmt)
+      @stmt.free
       @stmt = nil
     end
 
