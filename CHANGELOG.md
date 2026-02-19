@@ -1,4 +1,4 @@
-## 0.1.6 (unreleased)
+## 0.1.6 (2026-02-19)
 
 - Fixed memory leaks
 
