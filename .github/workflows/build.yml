@@ -7,13 +7,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ruby: jruby-10.0.2.0
+          - ruby: jruby-10.1.0.0
             os: ubuntu-latest
-          - ruby: jruby-9.4.14.0
+          - ruby: jruby-10.0.5.0
             os: macos-latest
           - ruby: "4.0"
             os: ubuntu-latest
             valgrind: true
+          - ruby: truffleruby-34.0.0
+            os: ubuntu-latest
           - ruby: truffleruby-33.0.1
             os: ubuntu-latest
     steps:
