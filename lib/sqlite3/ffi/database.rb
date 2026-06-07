@@ -2,7 +2,6 @@ module SQLite3
   class Database
     def close
       close_or_discard_db
-      @aggregators = nil
       self
     end
 
@@ -53,7 +52,7 @@ module SQLite3
 
       status = FFI::CApi.sqlite3_create_function(@db, FFI.string_value(name), block.arity, flags, FFI.wrap(block), FFI::FUNC, nil, nil)
       FFI.check(@db, status)
-      @functions[name] = block
+      @functions << block
       self
     end
 
@@ -236,7 +235,6 @@ module SQLite3
 
     def discard
       discard_db
-      @aggregators = nil
       self
     end
 
