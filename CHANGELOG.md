@@ -1,4 +1,4 @@
-## 0.1.7 (unreleased)
+## 0.1.7 (2026-06-07)
 
 - Synced with sqlite3-ruby 2.9.5
 - Fixed [GHSA-28hh-pr2h-2w89](https://github.com/sparklemotion/sqlite3-ruby/security/advisories/GHSA-28hh-pr2h-2w89) and [GHSA-j7fr-3v8c-3qc3](https://github.com/sparklemotion/sqlite3-ruby/security/advisories/GHSA-j7fr-3v8c-3qc3)
