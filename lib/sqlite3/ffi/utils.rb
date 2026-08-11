@@ -59,7 +59,7 @@ module SQLite3
     end
 
     def self.string_value_cstr(obj)
-      obj = obj.to_str
+      obj = string_value(obj)
       if obj.include?("\x00")
         raise ArgumentError, "string contains null byte"
       end
