@@ -87,9 +87,9 @@ module SQLite3
       klass = status2klass(status)
       return if klass.nil?
 
-      exception = klass.new(msg.read_pointer.read_string)
+      exception = klass.new(msg.read_string)
       exception.instance_variable_set(:@code, status)
-      CApi.sqlite3_free(msg.read_pointer)
+      CApi.sqlite3_free(msg)
 
       raise exception
     end

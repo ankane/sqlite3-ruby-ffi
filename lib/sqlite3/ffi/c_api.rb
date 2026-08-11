@@ -145,7 +145,7 @@ module SQLite3
       attach_function :sqlite3_bind_parameter_count, [:pointer], :int
       attach_function :sqlite3_bind_parameter_index, [:pointer, :string], :int
       attach_function :sqlite3_bind_parameter_name, [:pointer, :int], :string
-      attach_function :sqlite3_bind_text, [:pointer, :int, :string, :int, :pointer], :int
+      attach_function :sqlite3_bind_text, [:pointer, :int, :pointer, :int, :pointer], :int
       attach_function :sqlite3_bind_text16, [:pointer, :int, :pointer, :int, :pointer], :int
       attach_function :sqlite3_busy_handler, [:pointer, :pointer, :pointer], :int
       attach_function :sqlite3_busy_timeout, [:pointer, :int], :int
@@ -182,6 +182,7 @@ module SQLite3
       attach_function :sqlite3_last_insert_rowid, [:pointer], :int64
       attach_function :sqlite3_libversion, [], :string
       attach_function :sqlite3_libversion_number, [], :int
+      attach_function :sqlite3_mprintf, [:string, :varargs], :pointer
       attach_function :sqlite3_open16, [:pointer, :pointer], :int
       attach_function :sqlite3_open_v2, [:string, :pointer, :int, :pointer], :int
       attach_function :sqlite3_prepare_v2, [:pointer, :string, :int, :pointer, :pointer], :int

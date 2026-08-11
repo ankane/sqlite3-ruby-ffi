@@ -21,6 +21,10 @@ module SQLite3
       @db.close unless @db.closed?
     end
 
+    def native_utf16_encoding
+      ([1].pack("I") == [1].pack("N")) ? Encoding::UTF_16BE : Encoding::UTF_16LE
+    end
+
     def mock_database_load_extension_internal(db)
       class << db
         attr_reader :load_extension_internal_path
@@ -64,6 +68,18 @@ module SQLite3
 
     def test_segv
       assert_raises { SQLite3::Database.new 1 } # rubocop:disable Minitest/UnspecifiedException
+    end
+
+    def test_open_v2_raises_when_database_is_already_open
+      assert_raise(SQLite3::Exception) do
+        db.send(:open_v2, ":memory:", Constants::Open::READWRITE | Constants::Open::CREATE, nil)
+      end
+    end
+
+    def test_open16_raises_when_database_is_already_open
+      assert_raise(SQLite3::Exception) do
+        db.send(:open16, ":memory:".encode(Encoding::UTF_16LE))
+      end
     end
 
     def test_db_filename
@@ -269,13 +285,49 @@ module SQLite3
     end
 
     def test_new_with_options
-      # determine if Ruby is running on Big Endian platform
-      utf16 = ([1].pack("I") == [1].pack("N")) ? "UTF-16BE" : "UTF-16LE"
-
-      db = SQLite3::Database.new(":memory:".encode(utf16), utf16: true)
+      db = SQLite3::Database.new(":memory:".encode(native_utf16_encoding), utf16: true)
       assert_instance_of(SQLite3::Database, db)
     ensure
       db&.close
+    end
+
+    def test_new_with_filename_containing_null_byte_raises_and_creates_no_file
+      Dir.mktmpdir do |dir|
+        assert_raises(ArgumentError) { SQLite3::Database.new("#{dir}/prefix\0suffix.db") }
+        assert_empty Dir.children(dir)
+      end
+    end
+
+    def test_new_with_utf16_filename_containing_null_char_raises_and_creates_no_file
+      Dir.mktmpdir do |dir|
+        assert_raises(ArgumentError) { SQLite3::Database.new("#{dir}/prefix\0suffix.db".encode(native_utf16_encoding)) }
+        assert_empty Dir.children(dir)
+      end
+    end
+
+    def test_new_with_untagged_utf16_filename_and_utf16_option
+      Dir.mktmpdir do |dir|
+        untagged = "#{dir}/test.db".encode(native_utf16_encoding).force_encoding(Encoding::BINARY)
+        db = SQLite3::Database.new(untagged, utf16: true)
+        assert_path_exists("#{dir}/test.db")
+      ensure
+        db&.close
+      end
+    end
+
+    def test_new_with_untagged_utf16_filename_containing_null_char_raises_and_creates_no_file
+      Dir.mktmpdir do |dir|
+        untagged = "#{dir}/prefix\0suffix.db".encode(native_utf16_encoding).force_encoding(Encoding::BINARY)
+        assert_raises(ArgumentError) { SQLite3::Database.new(untagged, utf16: true) }
+        assert_empty Dir.children(dir)
+      end
+    end
+
+    def test_new_with_vfs_name_containing_null_byte_raises
+      Dir.mktmpdir do |dir|
+        assert_raises(ArgumentError) { SQLite3::Database.new("#{dir}/test.db", {}, "prefix\0suffix") }
+        assert_empty Dir.children(dir)
+      end
     end
 
     def test_close
@@ -508,6 +560,19 @@ module SQLite3
       assert_equal [blob, blob.length, 21], called_with
     end
 
+    def test_call_func_text_with_embedded_nul
+      called_with = nil
+      @db.define_function("hello") do |a|
+        called_with = a
+        nil
+      end
+      @db.execute("create table texts ( text_value text )")
+      @db.execute("insert into texts ( text_value ) values ( ? )", ["abc\0def"])
+      @db.execute("select hello(text_value) from texts")
+      assert_equal "abc\0def", called_with
+      assert_equal 7, called_with.bytesize
+    end
+
     def test_function_return
       @db.define_function("hello") { |a| 10 }
       assert_equal [10], @db.execute("select hello('world')").first
@@ -518,6 +583,45 @@ module SQLite3
         @db.define_function("hello") { |a| thing }
         assert_equal [thing], @db.execute("select hello('world')").first
       end
+    end
+
+    def test_function_raise_propagates_and_connection_remains_usable
+      @db.define_function("boom") { |a| raise "boom: #{a}" }
+
+      error = assert_raise(RuntimeError) { @db.execute("select boom(1)") }
+      assert_equal("boom: 1", error.message)
+
+      assert_equal([[2]], @db.execute("select 1 + 1"))
+    end
+
+    def test_function_raise_does_not_deadlock_other_threads_using_the_connection
+      skip("interpreter doesn't support fork") unless Process.respond_to?(:fork)
+      skip("valgrind doesn't handle forking") if i_am_running_in_valgrind
+
+      @db.close
+      read, write = IO.pipe
+      old_stderr, $stderr = $stderr, StringIO.new
+      pid = Process.fork do
+        read.close
+        db = SQLite3::Database.new(":memory:")
+        db.define_function("boom") { |a| raise "boom" }
+        begin
+          db.execute("select boom(1)")
+        rescue RuntimeError
+        end
+        Thread.new { db.execute("select 1") }.join
+        write.write("ok")
+        exit!
+      end
+      $stderr = old_stderr
+      write.close
+
+      result = IO.select([read], nil, nil, 10) && read.gets
+      Process.kill(:KILL, pid) unless result
+      Process.waitpid(pid)
+      read.close
+
+      assert_equal("ok", result, "second thread deadlocked on the connection after a function raised")
     end
 
     def test_function_gc_segfault

@@ -148,7 +148,7 @@ module SQLite3
       err_msg = ::FFI::MemoryPointer.new(:pointer)
       callback = results_as_hash == true ? FFI::HASH_CALLBACK : FFI::REGULAR_CALLBACK
       status = FFI::CApi.sqlite3_exec(@db, FFI.string_value(sql), callback, FFI.wrap(callback_ary), err_msg)
-      FFI.check_msg(@db, status, err_msg)
+      FFI.check_msg(@db, status, err_msg.read_pointer)
       callback_ary
     end
 
@@ -164,6 +164,12 @@ module SQLite3
     def require_open_db
       if @db.nil?
         raise SQLite3::Exception, "cannot use a closed database"
+      end
+    end
+
+    def require_closed_db
+      if !@db.nil?
+        raise SQLite3::Exception, "cannot open a database that is already open"
       end
     end
 
@@ -209,13 +215,25 @@ module SQLite3
     end
 
     def utf16_string_value_ptr(str)
-      str + "\x00\x00".encode(Encoding::UTF_16LE)
+      str = str.to_str
+
+      utf16str = str.dup
+      if utf16str.encoding != Encoding::UTF_16LE && utf16str.encoding != Encoding::UTF_16BE
+        utf16str.force_encoding(Encoding::UTF_16LE)
+      end
+      codepoints = utf16str.codepoints
+      if codepoints.include?(0)
+        raise ArgumentError, "string contains null char"
+      end
+
+      str + (+"\x00\x00").force_encoding(str.encoding)
     end
 
     def open_v2(file, flags, zvfs)
+      require_closed_db
       @owner = Process.pid
       db = ::FFI::MemoryPointer.new(:pointer)
-      status = FFI::CApi.sqlite3_open_v2(FFI.string_value(file), db, flags, zvfs)
+      status = FFI::CApi.sqlite3_open_v2(FFI.string_value_cstr(file), db, flags, zvfs.nil? ? nil : FFI.string_value_cstr(zvfs))
       @db = db.read_pointer
       @db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
       FFI.check(@db, status)
@@ -244,17 +262,23 @@ module SQLite3
 
         err_msg = ::FFI::MemoryPointer.new(:pointer)
         status = FFI::CApi.sqlite3_load_extension(@db, FFI.string_value(file), nil, err_msg)
-        FFI.check_msg(@db, status, err_msg)
+        FFI.check_msg(@db, status, err_msg.read_pointer)
         self
       end
     end
 
     def open16(file)
+      require_closed_db
       @owner = Process.pid
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open16(utf16_string_value_ptr(file), db)
       @db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
-      FFI.check(@db, status)
+      if status != FFI::CApi::SQLITE_OK
+        msg = FFI::CApi.sqlite3_mprintf("%s", :string, FFI::CApi.sqlite3_errmsg(@db))
+        FFI::CApi.sqlite3_close_v2(@db)
+        @db = nil
+        FFI.check_msg(@db, status, msg)
+      end
       status
     end
 

@@ -171,8 +171,6 @@ module SQLite3
         end
       end
 
-      @tracefunc = nil
-      @authorizer = nil
       @progress_handler = nil
       @collations = {}
       @functions = []
@@ -458,9 +456,7 @@ module SQLite3
     #
     # See also #create_aggregate_handler for a more object-oriented approach to
     # aggregate functions.
-    def create_aggregate(name, arity, step = nil, finalize = nil,
-      text_rep = Constants::TextRep::ANY, &block)
-
+    def create_aggregate(name, arity, step = nil, finalize = nil, text_rep = Constants::TextRep::ANY, &block)
       proxy = Class.new do
         def self.step(&block)
           define_method(:step_with_ctx, &block)

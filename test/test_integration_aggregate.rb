@@ -342,6 +342,30 @@ class IntegrationAggregateTestCase < SQLite3::TestCase
     end
   end
 
+  class CompactingAggregator
+    def step(*args)
+      @sum ||= 0
+      args.each { |a| @sum += a.to_i }
+      GC.verify_compaction_references(expand_heap: true, toward: :empty)
+    end
+
+    def finalize
+      @sum
+    end
+  end
+
+  # Used by one test only, so a live count of 1 means just the template.
+  class ReleasableAggregator
+    def step(*args)
+      @sum ||= 0
+      args.each { |a| @sum += a.to_i }
+    end
+
+    def finalize
+      @sum
+    end
+  end
+
   class AccumulateAggregator2
     def step(a, b)
       @sum ||= 1
@@ -364,6 +388,35 @@ class IntegrationAggregateTestCase < SQLite3::TestCase
     assert_equal 2145, values[1]
   end
 
+  def test_define_aggregator_does_not_use_moved_aggregator_after_gc_compaction
+    skip_unless_compaction_supported
+
+    @db.define_aggregator("accumulate", AccumulateAggregator.new)
+
+    gc_verify_compaction_references
+
+    assert_equal 33, @db.get_first_value("select accumulate(c) from foo")
+  end
+
+  def test_define_aggregator_does_not_use_moved_instances_after_gc_compaction
+    skip_unless_compaction_supported
+
+    @db.define_aggregator("accumulate", CompactingAggregator.new)
+
+    values = @db.get_first_row("select accumulate(a), accumulate(c) from foo")
+    assert_equal 6, values[0]
+    assert_equal 33, values[1]
+  end
+
+  def test_aggregate_instances_are_released_after_each_query
+    @db.define_aggregator("accumulate", ReleasableAggregator.new)
+
+    5.times { assert_equal 33, @db.get_first_value("select accumulate(c) from foo") }
+    GC.start(full_mark: true, immediate_sweep: true)
+
+    assert_equal 1, ObjectSpace.each_object(ReleasableAggregator).count
+  end
+
   def test_step_on_statement_whose_database_was_closed_does_not_use_freed_aggregator
     @db.define_aggregator("accumulate", AccumulateAggregator.new)
     stmt = @db.prepare("select accumulate(c) from foo")
@@ -373,5 +426,42 @@ class IntegrationAggregateTestCase < SQLite3::TestCase
 
     values = stmt.step
     assert_equal 33, values[0]
+  end
+
+  # GHSA-mwm8-39rw-8826: rb_sqlite3_aggregator_step converts the arguments into
+  # an xcalloc'd VALUE array that is not a GC root. sqlite3val2rb allocates, so a
+  # GC while converting a later argument could collect a Ruby object already
+  # stored in an earlier slot and hand the step block a wrong or freed object.
+  # Needs arity >= 2 (the arity 1 branch uses a pinned stack local). Large column
+  # values make every conversion allocate, so the window is reachable.
+  def test_multi_argument_step_arguments_survive_gc
+    @db.execute("create table wide ( a text, b text )")
+    filler = "p" * 2000
+    @db.transaction do
+      stmt = @db.prepare("insert into wide values ( ?, ? )")
+      200.times { |i| stmt.execute("a-#{i}-#{filler}", "b-#{i}-#{filler}") }
+      stmt.close
+    end
+
+    seen = 0
+    bad = []
+    @db.create_aggregate("checkcols", 2) do
+      step do |ctx, x, y|
+        seen += 1
+        bad << x unless x.is_a?(String) && x.start_with?("a-")
+        bad << y unless y.is_a?(String) && y.start_with?("b-")
+      end
+      finalize { |ctx| ctx.result = seen }
+    end
+
+    begin
+      GC.stress = true
+      @db.get_first_value("select checkcols(a, b) from wide")
+    ensure
+      GC.stress = false
+    end
+
+    assert_equal 200, seen
+    assert_empty bad, "aggregate step received corrupted arguments after GC"
   end
 end

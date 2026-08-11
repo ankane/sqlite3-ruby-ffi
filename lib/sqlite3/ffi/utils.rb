@@ -58,6 +58,14 @@ module SQLite3
       obj.to_str
     end
 
+    def self.string_value_cstr(obj)
+      obj = obj.to_str
+      if obj.include?("\x00")
+        raise ArgumentError, "string contains null byte"
+      end
+      obj
+    end
+
     RB_ERRINFO = :sqlite3_ffi_rb_errinfo
 
     def self.rb_errinfo
