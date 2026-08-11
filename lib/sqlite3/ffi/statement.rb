@@ -111,7 +111,7 @@ module SQLite3
           if value.encoding != Encoding::UTF_8 && value.encoding != Encoding::US_ASCII
             value = value.encode(Encoding::UTF_8)
           end
-          status = FFI::CApi.sqlite3_bind_text(@stmt, index, value, value.bytesize, FFI::CApi::SQLITE_TRANSIENT)
+          status = FFI::CApi.sqlite3_bind_text(@stmt, index, +value, value.bytesize, FFI::CApi::SQLITE_TRANSIENT)
         end
       when Float
         status = FFI::CApi.sqlite3_bind_double(@stmt, index, value)
