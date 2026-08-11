@@ -184,7 +184,7 @@ module SQLite3
       attach_function :sqlite3_libversion_number, [], :int
       attach_function :sqlite3_mprintf, [:string, :varargs], :pointer
       attach_function :sqlite3_open16, [:pointer, :pointer], :int
-      attach_function :sqlite3_open_v2, [:string, :pointer, :int, :pointer], :int
+      attach_function :sqlite3_open_v2, [:string, :pointer, :int, :string], :int
       attach_function :sqlite3_prepare_v2, [:pointer, :string, :int, :pointer, :pointer], :int
       attach_function :sqlite3_progress_handler, [:pointer, :int, :pointer, :pointer], :void
       attach_function :sqlite3_reset, [:pointer], :int
