@@ -131,3 +131,5 @@ module SQLite3
 end
 
 puts "SQLITE3_TEST_GC_LEVEL: #{SQLite3::TestCase.gc_level}"
+
+require_relative "ffi_helper"

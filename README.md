@@ -30,6 +30,7 @@ The code in `lib` and `test` is an exact copy, plus some additional files:
 - `lib/sqlite3/ffi/*` (port of `ext`)
 - `lib/sqlite3/ffi.rb`
 - `lib/sqlite3/sqlite3_native.rb`
+- `lib/ffi_helper.rb`
 
 ## History
 
