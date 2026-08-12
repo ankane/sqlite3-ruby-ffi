@@ -275,7 +275,6 @@ module SQLite3
       @db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
       if status != FFI::CApi::SQLITE_OK
         msg = FFI::CApi.sqlite3_mprintf("%s", :string, FFI::CApi.sqlite3_errmsg(@db))
-        FFI::CApi.sqlite3_close_v2(@db)
         @db = nil
         FFI.check_msg(@db, status, ::FFI::MemoryPointer.new(:pointer).write_pointer(msg))
       end
