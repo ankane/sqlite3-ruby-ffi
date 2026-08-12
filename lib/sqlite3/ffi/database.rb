@@ -274,9 +274,12 @@ module SQLite3
       status = FFI::CApi.sqlite3_open16(utf16_string_value_ptr(file), db)
       @db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
       if status != FFI::CApi::SQLITE_OK
-        msg = FFI::CApi.sqlite3_mprintf("%s", :string, FFI::CApi.sqlite3_errmsg(@db))
+        # https://github.com/ffi/ffi/issues/1121
+        # msg = FFI::CApi.sqlite3_mprintf("%s", :string, FFI::CApi.sqlite3_errmsg(@db))
+        # msg = ::FFI::MemoryPointer.new(:pointer).write_pointer(msg)
+        msg = FFI::CApi.sqlite3_errmsg(@db)
         @db = nil
-        FFI.check_msg(@db, status, ::FFI::MemoryPointer.new(:pointer).write_pointer(msg))
+        FFI.check_msg(@db, status, msg)
       end
       status
     end
