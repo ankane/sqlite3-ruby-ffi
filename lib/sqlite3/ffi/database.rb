@@ -226,12 +226,9 @@ module SQLite3
         raise ArgumentError, "string contains null char"
       end
 
-      if RUBY_VERSION.to_f >= 3.4
-        str.append_as_bytes(0, 0)
-      else
-        str << 0
-        str << 0
-      end
+      str = str.dup
+      str << 0
+      str << 0
       str
     end
 
