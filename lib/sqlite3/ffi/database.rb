@@ -281,6 +281,7 @@ module SQLite3
         # msg = FFI::CApi.sqlite3_mprintf("%s", :string, FFI::CApi.sqlite3_errmsg(@db))
         # msg = ::FFI::MemoryPointer.new(:pointer).write_pointer(msg)
         msg = FFI::CApi.sqlite3_errmsg(@db)
+        @db.free
         @db = nil
         FFI.check_msg(@db, status, msg)
       end
