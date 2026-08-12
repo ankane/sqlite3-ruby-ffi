@@ -215,7 +215,7 @@ module SQLite3
     end
 
     def utf16_string_value_ptr(str)
-      str = str.to_str
+      str = FFI.string_value(str)
 
       utf16str = str.dup
       if utf16str.encoding != Encoding::UTF_16LE && utf16str.encoding != Encoding::UTF_16BE
@@ -226,7 +226,13 @@ module SQLite3
         raise ArgumentError, "string contains null char"
       end
 
-      str + (+"\x00\x00").force_encoding(str.encoding)
+      if RUBY_VERSION.to_f >= 3.4
+        str.append_as_bytes(0, 0)
+      else
+        str << 0
+        str << 0
+      end
+      str
     end
 
     def open_v2(file, flags, zvfs)
