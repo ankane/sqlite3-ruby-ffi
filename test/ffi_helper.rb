@@ -6,6 +6,11 @@ module SQLite3::FFI::TestCase
       skip_tests << "IntegrationAggregateTestCase#test_multi_argument_step_arguments_survive_gc"
     end
     skip_tests << "SQLite3::TestDatabase#test_function_gc_segfault" if stress?
+    if RUBY_ENGINE == "jruby"
+      # can use JRUBY_OPTS=-X+O to enable ObjectSpace.each_object, but behavior differs
+      skip_tests << "IntegrationAggregateTestCase#test_aggregate_instances_are_released_after_each_query"
+      skip_tests << "SQLite3::TestCollation#test_replacing_a_collation_releases_the_previous_comparator"
+    end
     skip if skip_tests.include?("#{self.class.name}##{name}")
 
     super
