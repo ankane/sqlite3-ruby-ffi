@@ -148,7 +148,7 @@ module SQLite3
       err_msg = ::FFI::MemoryPointer.new(:pointer)
       callback = results_as_hash == true ? FFI::HASH_CALLBACK : FFI::REGULAR_CALLBACK
       status = FFI::CApi.sqlite3_exec(@db, FFI.string_value(sql), callback, FFI.wrap(callback_ary), err_msg)
-      FFI.check_msg(@db, status, err_msg.read_pointer)
+      FFI.check_msg(@db, status, err_msg)
       callback_ary
     end
 
@@ -262,7 +262,7 @@ module SQLite3
 
         err_msg = ::FFI::MemoryPointer.new(:pointer)
         status = FFI::CApi.sqlite3_load_extension(@db, FFI.string_value(file), nil, err_msg)
-        FFI.check_msg(@db, status, err_msg.read_pointer)
+        FFI.check_msg(@db, status, err_msg)
         self
       end
     end
@@ -277,7 +277,7 @@ module SQLite3
         msg = FFI::CApi.sqlite3_mprintf("%s", :string, FFI::CApi.sqlite3_errmsg(@db))
         FFI::CApi.sqlite3_close_v2(@db)
         @db = nil
-        FFI.check_msg(@db, status, msg)
+        FFI.check_msg(@db, status, ::FFI::MemoryPointer.new(:pointer).write_pointer(msg))
       end
       status
     end
