@@ -20,7 +20,7 @@ module SQLite3::FFI::TestCase
   end
 
   def stress?
-    gc_level == "stress"
+    gc_level == :stress
   end
 end
 
