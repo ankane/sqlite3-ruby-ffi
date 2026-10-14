@@ -1,6 +1,7 @@
 ## 0.2.0 (unreleased)
 
 - Synced with sqlite3-ruby 2.10.0
+- Dropped support for Ruby < 3.2
 
 ## 0.1.8 (2026-08-11)
 
