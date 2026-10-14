@@ -22,6 +22,8 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      - if: ${{ runner.os == 'macOS' }}
+        run: brew upgrade sqlite
       - run: bundle exec rake test
 
       - if: ${{ matrix.valgrind }}
