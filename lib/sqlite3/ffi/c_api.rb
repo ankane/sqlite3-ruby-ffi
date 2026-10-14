@@ -90,6 +90,9 @@ module SQLite3
       SQLITE_DBCONFIG_ENABLE_COMMENTS       = 1022
       SQLITE_DBCONFIG_MAX                   = 1022
 
+      SQLITE_DESERIALIZE_FREEONCLOSE = 1
+      SQLITE_DESERIALIZE_RESIZEABLE  = 2
+
       SQLITE_OPEN_READONLY       = 0x00000001
       SQLITE_OPEN_READWRITE      = 0x00000002
       SQLITE_OPEN_CREATE         = 0x00000004
@@ -182,6 +185,7 @@ module SQLite3
       attach_function :sqlite3_last_insert_rowid, [:pointer], :int64
       attach_function :sqlite3_libversion, [], :string
       attach_function :sqlite3_libversion_number, [], :int
+      attach_function :sqlite3_malloc64, [:int64], :pointer
       attach_function :sqlite3_mprintf, [:string, :varargs], :pointer
       attach_function :sqlite3_open16, [:pointer, :pointer], :int
       attach_function :sqlite3_open_v2, [:string, :pointer, :int, :string], :int
@@ -197,6 +201,7 @@ module SQLite3
       attach_function :sqlite3_sql, [:pointer], :string
       attach_function :sqlite3_status64, [:int, :pointer, :pointer, :int], :int
       attach_function :sqlite3_step, [:pointer], :int
+      attach_function :sqlite3_stmt_busy, [:pointer], :int
       attach_function :sqlite3_stmt_status, [:pointer, :int, :int], :int
       attach_function :sqlite3_threadsafe, [], :int
       attach_function :sqlite3_total_changes, [:pointer], :int
@@ -216,6 +221,13 @@ module SQLite3
         false
       end
 
+      HAVE_SQLITE3_DESERIALIZE = begin
+        attach_function :sqlite3_deserialize, [:pointer, :string, :pointer, :int64, :int64, :uint], :int
+        true
+      rescue ::FFI::NotFoundError
+        false
+      end
+
       HAVE_SQLITE3_ENABLE_LOAD_EXTENSION = begin
         attach_function :sqlite3_enable_load_extension, [:pointer, :int], :int
         true
@@ -225,6 +237,13 @@ module SQLite3
 
       HAVE_SQLITE3_LOAD_EXTENSION = begin
         attach_function :sqlite3_load_extension, [:pointer, :string, :pointer, :pointer], :int
+        true
+      rescue ::FFI::NotFoundError
+        false
+      end
+
+      HAVE_SQLITE3_SERIALIZE = begin
+        attach_function :sqlite3_serialize, [:pointer, :string, :pointer, :uint], :pointer
         true
       rescue ::FFI::NotFoundError
         false

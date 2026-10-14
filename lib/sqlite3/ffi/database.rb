@@ -144,6 +144,8 @@ module SQLite3
     def exec_batch(sql, results_as_hash)
       require_open_db
 
+      @stmt_deadline = nil
+
       callback_ary = []
       err_msg = ::FFI::MemoryPointer.new(:pointer)
       callback = results_as_hash == true ? FFI::HASH_CALLBACK : FFI::REGULAR_CALLBACK
@@ -157,6 +159,51 @@ module SQLite3
 
       fname = FFI::CApi.sqlite3_db_filename(@db, db_name)
       fname.null? ? nil : fname.read_string.force_encoding(Encoding::UTF_8)
+    end
+
+    if FFI::CApi::HAVE_SQLITE3_SERIALIZE
+      def serialize(db_name = nil)
+        require_open_db
+
+        z_schema = db_name.nil? ? nil : FFI.string_value_cstr(db_name)
+
+        size = ::FFI::MemoryPointer.new(:int64)
+        data = FFI::CApi.sqlite3_serialize(@db, z_schema, size, 0)
+        size = size.read_int64
+
+        if data.null? && size < 0
+          raise SQLite3::Exception, "unable to serialize database \"%s\"" % [z_schema || "main"]
+        elsif data.null? && size > 0
+          raise NoMemoryError, "failed to allocate %d bytes for serialization" % [size]
+        end
+
+        result = data.read_bytes(size)
+        FFI::CApi.sqlite3_free(data)
+        result
+      end
+    end
+
+    if FFI::CApi::HAVE_SQLITE3_DESERIALIZE && FFI::CApi.sqlite3_libversion_number >= 3054000
+      def deserialize(data, db_name = nil)
+        require_open_db
+
+        data = FFI.string_value(data)
+        z_schema = db_name.nil? ? nil : FFI.string_value_cstr(db_name)
+        sz_db = data.bytesize
+
+        sz_buf = sz_db + 20
+        p_data = FFI::CApi.sqlite3_malloc64(sz_buf)
+        if p_data.null?
+          raise NoMemoryError, "failed to allocate %d bytes for deserialization" % [sz_buf]
+        end
+        p_data.put_bytes(0, data)
+        p_data.put_bytes(sz_db, "\x00"*(sz_buf - sz_db))
+
+        status = FFI::CApi.sqlite3_deserialize(@db, z_schema, p_data, sz_db, sz_db, FFI::CApi::SQLITE_DESERIALIZE_FREEONCLOSE | FFI::CApi::SQLITE_DESERIALIZE_RESIZEABLE)
+
+        FFI.check(@db, status)
+        self
+      end
     end
 
     private

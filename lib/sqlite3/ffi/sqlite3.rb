@@ -37,7 +37,7 @@ module SQLite3
   end
 
   def self.libversion
-    FFI::CApi.sqlite3_libversion
+    FFI::CApi.sqlite3_libversion_number
   end
 
   def self.status(parameter, reset_flag = false)

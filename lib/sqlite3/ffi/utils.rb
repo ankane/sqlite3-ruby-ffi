@@ -39,7 +39,11 @@ module SQLite3
     end
 
     def self.interned_utf8_cstr(str)
-      -str
+      -str.force_encoding(Encoding::UTF_8)
+    end
+
+    def self.interned_downcased_utf8_cstr(str)
+      -str.force_encoding(Encoding::UTF_8).downcase(:ascii)
     end
 
     def self.string_value(obj)

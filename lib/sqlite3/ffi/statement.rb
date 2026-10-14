@@ -4,6 +4,7 @@ module SQLite3
       sql = FFI.string_value(sql)
 
       @db = db # so can check if discarded
+      @db.instance_variable_set(:@stmt_deadline, nil)
       db = db.instance_variable_get(:@db)
       stmt = ::FFI::MemoryPointer.new(:pointer)
       tail = ::FFI::MemoryPointer.new(:pointer)
@@ -11,7 +12,6 @@ module SQLite3
       FFI.check_prepare(db, status, sql)
 
       @stmt = ::FFI::AutoPointer.new(stmt.read_pointer, FFI::CApi.method(:sqlite3_finalize))
-      @db.instance_variable_set(:@stmt_deadline, nil)
 
       tail.read_pointer.read_string.force_encoding(Encoding::UTF_8)
     end
@@ -34,6 +34,10 @@ module SQLite3
       return nil if @done
 
       stmt = @stmt
+
+      if FFI::CApi.sqlite3_stmt_busy(stmt) == 0
+        @db.instance_variable_set(:@stmt_deadline, nil)
+      end
 
       value = FFI::CApi.sqlite3_step(stmt)
       if FFI.rb_errinfo
@@ -168,7 +172,16 @@ module SQLite3
       require_live_db
       require_open_stmt
 
-      FFI::CApi.sqlite3_column_decltype(@stmt, index)
+      name = FFI::CApi.sqlite3_column_decltype(@stmt, index)
+      name ? name.force_encoding(Encoding::UTF_8) : nil
+    end
+
+    def column_decltype_downcased(index)
+      require_live_db
+      require_open_stmt
+
+      name = FFI::CApi.sqlite3_column_decltype(@stmt, index)
+      name ? FFI.interned_downcased_utf8_cstr(name) : nil
     end
 
     def bind_parameter_count
