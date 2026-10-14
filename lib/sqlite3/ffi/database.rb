@@ -173,7 +173,8 @@ module SQLite3
 
         if data.null? && size < 0
           raise SQLite3::Exception, "unable to serialize database \"%s\"" % [z_schema || "main"]
-        elsif data.null? && size > 0
+        end
+        if data.null? && size > 0
           raise NoMemoryError, "failed to allocate %d bytes for serialization" % [size]
         end
 
