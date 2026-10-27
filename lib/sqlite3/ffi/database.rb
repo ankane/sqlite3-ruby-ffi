@@ -20,7 +20,7 @@ module SQLite3
 
       blk ||= block
       @ctx.trace_handler = blk
-      FFI::CApi.sqlite3_trace_v2(@ctx.db, FFI::CApi::SQLITE_TRACE_STMT, blk.nil? ? nil : FFI::TRACE, FFI.wrap(blk))
+      FFI::CApi.sqlite3_trace_v2(@ctx.db, FFI::CApi::SQLITE_TRACE_STMT, blk.nil? ? nil : FFI::TRACE, FFI.wrap(@ctx))
       self
     end
 
@@ -93,7 +93,7 @@ module SQLite3
     def authorizer=(authorizer)
       require_open_db
 
-      status = FFI::CApi.sqlite3_set_authorizer(@ctx.db, authorizer.nil? ? nil : FFI::AUTH, FFI.wrap(authorizer))
+      status = FFI::CApi.sqlite3_set_authorizer(@ctx.db, authorizer.nil? ? nil : FFI::AUTH, FFI.wrap(@ctx))
       FFI.check(@ctx.db, status)
       @ctx.authorizer = authorizer
     end

@@ -17,14 +17,14 @@ module SQLite3
 
     TRACE = ::FFI::Function.new(:int, [:uint, :pointer, :pointer, :pointer]) do |_, ctx, _, x|
       protect_callback do
-        unwrap(ctx).call(x.read_string)
+        unwrap(ctx).trace_handler.call(x.read_string)
         0
       end
     end
 
     AUTH = ::FFI::Function.new(:int, [:pointer, :int, :string, :string, :string, :string]) do |ctx, op_id, s1, s2, s3, s4|
       protect_callback do
-        result = unwrap(ctx).call(op_id, s1, s2, s3, s4)
+        result = unwrap(ctx).authorizer.call(op_id, s1, s2, s3, s4)
         if result.is_a?(Integer)
           result
         elsif result == true
