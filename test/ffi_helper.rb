@@ -18,6 +18,11 @@ module SQLite3::FFI::TestCase
       skip_tests << "SQLite3::TestCollation#test_replacing_a_collation_by_another_case_releases_the_previous_comparator"
     end
 
+    # https://github.com/jruby/jruby/issues/9892
+    if RUBY_ENGINE == "jruby"
+      skip_tests << "IntegrationAggregateTestCase#test_aggregate_throw_unwinds_to_its_catch"
+    end
+
     # specific to C extension
     skip_tests << "SQLite3::TestDatabase#test_typed_data_struct_name"
     skip_tests << "SQLite3::TestStatement#test_typed_data_struct_name"
