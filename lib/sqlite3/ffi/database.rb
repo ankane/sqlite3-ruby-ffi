@@ -321,7 +321,7 @@ module SQLite3
     end
 
     def disable_quirk_mode
-      return false if @ctx.db.nil?
+      return false if @ctx&.db.nil?
 
       FFI::CApi.sqlite3_db_config(@ctx.db, FFI::CApi::SQLITE_DBCONFIG_DQS_DDL, :int, 0, :pointer, nil)
       FFI::CApi.sqlite3_db_config(@ctx.db, FFI::CApi::SQLITE_DBCONFIG_DQS_DML, :int, 0, :pointer, nil)
