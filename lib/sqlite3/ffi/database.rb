@@ -117,8 +117,8 @@ module SQLite3
       name = FFI.string_value(name)
       key = name.dup
       key.each_byte.with_index do |v, i|
-        if v >= 'A'.ord && v <= 'Z'.ord
-          key.setbyte(i, v + ('a'.ord - 'A'.ord))
+        if v >= 65 && v <= 90 # 'A' and 'Z'
+          key.setbyte(i, v + 32) # 'a' - 'A'
         end
       end
 
