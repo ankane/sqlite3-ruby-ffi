@@ -1,4 +1,4 @@
-## 0.2.1 (unreleased)
+## 0.2.1 (2026-10-27)
 
 - Synced with sqlite3-ruby 2.10.2
 
