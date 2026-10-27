@@ -311,7 +311,6 @@ module SQLite3
       @ctx.owner = Process.pid
       db = ::FFI::MemoryPointer.new(:pointer)
       status = FFI::CApi.sqlite3_open_v2(FFI.string_value_cstr(file), db, flags, zvfs.nil? ? nil : FFI.string_value_cstr(zvfs))
-      @ctx.db = db.read_pointer
       @ctx.db = ::FFI::AutoPointer.new(db.read_pointer, FFI::CApi.method(:sqlite3_close_v2))
       FFI.check(@ctx.db, status)
       if (flags & FFI::CApi::SQLITE_OPEN_READONLY) != 0
