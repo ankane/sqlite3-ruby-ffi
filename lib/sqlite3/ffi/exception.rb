@@ -107,5 +107,66 @@ module SQLite3
 
       raise exception
     end
+
+    CallbackFrame = Struct.new(:state, :prev, :holder)
+
+    CallbackFrames = Struct.new(:top)
+
+    def self.current_callback_frames_holder
+      holder = Thread.current[:__sqlite3_callback_frames__]
+      holder.is_a?(CallbackFrames) ? holder : nil
+    end
+
+    def self.current_callback_frames
+      holder = current_callback_frames_holder
+      holder.nil? ? nil : holder
+    end
+
+    def self.push_callback_frame(frame)
+      holder = current_callback_frames_holder
+
+      if holder.nil?
+        holder = CallbackFrames.new
+        Thread.current[:__sqlite3_callback_frames__] = holder
+      end
+      frames = holder
+
+      frame.state = nil
+      frame.prev = frames.top
+      frame.holder = holder
+      frames.top = frame
+    end
+
+    def self.pop_callback_frame(frame)
+      frame.holder.top = frame.prev
+      frame.state
+    end
+
+    def self.protect_callback
+      frames = current_callback_frames
+      frame = frames ? frames.top : nil
+      result = nil
+      state = nil
+
+      if frame && frame.state
+        _failed = true
+        return nil
+      end
+
+      begin
+        result = yield
+      rescue => e
+        state = e
+      end
+      _failed = !state.nil?
+
+      if frame
+        frame.state = state
+      elsif state
+        self.rb_errinfo = nil
+      end
+
+      result
+    end
   end
 end

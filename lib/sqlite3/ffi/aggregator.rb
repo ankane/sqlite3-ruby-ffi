@@ -1,17 +1,8 @@
 module SQLite3
   module FFI
-    class AggregatorWrapper
-      attr_reader :handler_klass, :instances
+    AggregatorWrapper = Struct.new(:handler_klass, :instances)
 
-      def initialize(handler_klass)
-        @handler_klass = handler_klass
-        @instances = []
-      end
-    end
-
-    class AggregatorInstance
-      attr_accessor :handler_instance
-    end
+    AggregatorInstance = Struct.new(:handler_instance)
 
     def self.aggregate_instance(ctx)
       aw = FFI.unwrap(CApi.sqlite3_user_data(ctx))
@@ -64,26 +55,22 @@ module SQLite3
     end
 
     AGGREGATOR_STEP = ::FFI::Function.new(:void, [:pointer, :int, :pointer]) do |ctx, argc, argv|
-      begin
+      FFI.protect_callback do
         inst = aggregate_instance(ctx)
         handler_instance = inst.handler_instance
         params = argv.read_array_of_pointer(argc).map { |v| FFI.sqlite3val2rb(v) }
         handler_instance.step(*params)
-      rescue => e
-        FFI.rb_errinfo = e
       end
     end
 
     AGGREGATOR_FINAL = ::FFI::Function.new(:void, [:pointer]) do |ctx|
-      begin
+      FFI.protect_callback do
         inst = aggregate_instance(ctx)
         handler_instance = inst.handler_instance
         result = handler_instance.finalize
         FFI.set_sqlite3_func_result(ctx, result)
-        aggregate_instance_destroy(ctx)
-      rescue => e
-        FFI.rb_errinfo = e
       end
+      aggregate_instance_destroy(ctx)
     end
   end
 end

@@ -8,12 +8,12 @@ module SQLite3
         raise ArgumentError, "cannot backup to a closed database"
       end
 
-      ddb = dstdb.instance_variable_get(:@db)
+      ddb = dstdb.instance_variable_get(:@ctx).db
       @p =
         FFI::CApi.sqlite3_backup_init(
           ddb,
           FFI.string_value(dstname),
-          srcdb.instance_variable_get(:@db),
+          srcdb.instance_variable_get(:@ctx).db,
           FFI.string_value(srcname)
         )
 
@@ -24,8 +24,15 @@ module SQLite3
 
     def step(n_page)
       require_open_backup
+      pages = n_page.to_i
 
-      FFI::CApi.sqlite3_backup_step(@p, n_page)
+      frame = FFI::CallbackFrame.new
+      FFI.push_callback_frame(frame)
+      status = FFI::CApi.sqlite3_backup_step(@p, pages)
+      if (callback_state = FFI.pop_callback_frame(frame))
+        raise callback_state
+      end
+      status
     end
 
     def finish

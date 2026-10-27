@@ -12,6 +12,14 @@ module SQLite3
       @db.close
     end
 
+    def test_typed_data_struct_name
+      skip("ObjectSpace.dump is CRuby-specific") unless RUBY_ENGINE == "ruby"
+      require "objspace"
+      require "json"
+
+      assert_equal "SQLite3::Statement", JSON.parse(ObjectSpace.dump(@stmt))["struct"]
+    end
+
     def test_rows_should_be_frozen
       @db.execute 'CREATE TABLE "things" ("float" float, "int" int, "text" blob, "string" string, "nil" string)'
       stmt = @db.prepare "INSERT INTO things (float, int, text, string, nil) VALUES (?, ?, ?, ?, ?)"
@@ -223,6 +231,32 @@ module SQLite3
       end
     end
 
+    def test_prepare_raises_on_sql_longer_than_int_max
+      sql = string_longer_than_int_max
+      assert_raises(RangeError) { SQLite3::Statement.new(@db, sql) }
+    end
+
+    def test_bind_param_raises_on_text_longer_than_int_max
+      text = string_longer_than_int_max
+      stmt = SQLite3::Statement.new(@db, "select ?")
+      assert_raises(RangeError) { stmt.bind_param(1, text) }
+      stmt.close
+    end
+
+    def test_bind_param_raises_on_utf16_text_longer_than_int_max
+      text = string_longer_than_int_max(Encoding::UTF_16LE)
+      stmt = SQLite3::Statement.new(@db, "select ?")
+      assert_raises(RangeError) { stmt.bind_param(1, text) }
+      stmt.close
+    end
+
+    def test_bind_param_raises_on_blob_longer_than_int_max
+      blob = string_longer_than_int_max(Encoding::BINARY)
+      stmt = SQLite3::Statement.new(@db, "select ?")
+      assert_raises(RangeError) { stmt.bind_param(1, blob) }
+      stmt.close
+    end
+
     def test_decltype_is_utf8
       @db.execute %(create table foo(a integer, b "VARCHÄR(255)"))
       @db.prepare("select a, b from foo") do |stmt|
@@ -344,6 +378,21 @@ module SQLite3
     def test_step_never_moves_past_done
       10.times { @stmt.step }
       @stmt.done?
+    end
+
+    def test_step_does_not_allocate_when_done
+      skip("allocation counts are CRuby-specific") unless RUBY_ENGINE == "ruby"
+
+      # The first pass fills method caches, which allocate.
+      allocations = 2.times.map do
+        @stmt.reset!
+        @stmt.step
+        before = GC.stat(:total_allocated_objects)
+        @stmt.step
+        GC.stat(:total_allocated_objects) - before
+      end
+
+      assert_equal 0, allocations.last
     end
 
     def test_column_count

@@ -1,17 +1,25 @@
 module SQLite3
   class Statement
     def prepare(db, sql)
-      sql = FFI.string_value(sql)
+      @db_ctx = db.instance_variable_get(:@ctx)
+      @db_ctx.stmt_deadline = nil
 
-      @db = db # so can check if discarded
-      @db.instance_variable_set(:@stmt_deadline, nil)
-      db = db.instance_variable_get(:@db)
+      sql_cstr = FFI.string_value(sql)
+      sql_len = FFI.rstring_lenint(sql)
+
+      db = @db_ctx.db
       stmt = ::FFI::MemoryPointer.new(:pointer)
       tail = ::FFI::MemoryPointer.new(:pointer)
-      status = FFI::CApi.sqlite3_prepare_v2(db, sql, sql.bytesize, stmt, tail)
-      FFI.check_prepare(db, status, sql)
-
+      frame = FFI::CallbackFrame.new
+      FFI.push_callback_frame(frame)
+      status = FFI::CApi.sqlite3_prepare_v2(db, sql_cstr, sql_len, stmt, tail)
+      # sqlite3_finalize is no-op on NULL pointer
       @stmt = ::FFI::AutoPointer.new(stmt.read_pointer, FFI::CApi.method(:sqlite3_finalize))
+      if (callback_state = FFI.pop_callback_frame(frame))
+        raise callback_state
+      end
+
+      FFI.check_prepare(db, status, sql)
 
       tail.read_pointer.read_string.force_encoding(Encoding::UTF_8)
     end
@@ -36,14 +44,19 @@ module SQLite3
       stmt = @stmt
 
       if FFI::CApi.sqlite3_stmt_busy(stmt) == 0
-        @db.instance_variable_set(:@stmt_deadline, nil)
+        @db_ctx.stmt_deadline = nil
       end
 
+      frame = FFI::CallbackFrame.new
+      FFI.push_callback_frame(frame)
       value = FFI::CApi.sqlite3_step(stmt)
-      if FFI.rb_errinfo
-        exception = FFI.rb_errinfo
-        FFI.rb_errinfo = nil
-        raise exception
+      if (callback_state = FFI.pop_callback_frame(frame))
+        raise callback_state
+      end
+
+      if value == FFI::CApi::SQLITE_DONE
+        @done = true
+        return nil
       end
 
       length = FFI::CApi.sqlite3_column_count(stmt)
@@ -75,9 +88,6 @@ module SQLite3
           end
           list << val
         end
-      when FFI::CApi::SQLITE_DONE
-        @done = true
-        return nil
       else
         FFI::CApi.sqlite3_reset(stmt)
         @done = false
@@ -108,14 +118,14 @@ module SQLite3
       case value
       when String
         if value.is_a?(Blob) || value.encoding == Encoding::BINARY
-          status = FFI::CApi.sqlite3_bind_blob(@stmt, index, value, value.bytesize, FFI::CApi::SQLITE_TRANSIENT)
+          status = FFI::CApi.sqlite3_bind_blob(@stmt, index, value, FFI.rstring_lenint(value), FFI::CApi::SQLITE_TRANSIENT)
         elsif value.encoding == Encoding::UTF_16LE || value.encoding == Encoding::UTF_16BE
-          status = FFI::CApi.sqlite3_bind_text16(@stmt, index, value, value.bytesize, FFI::CApi::SQLITE_TRANSIENT)
+          status = FFI::CApi.sqlite3_bind_text16(@stmt, index, value, FFI.rstring_lenint(value), FFI::CApi::SQLITE_TRANSIENT)
         else
           if value.encoding != Encoding::UTF_8 && value.encoding != Encoding::US_ASCII
             value = value.encode(Encoding::UTF_8)
           end
-          status = FFI::CApi.sqlite3_bind_text(@stmt, index, +value, value.bytesize, FFI::CApi::SQLITE_TRANSIENT)
+          status = FFI::CApi.sqlite3_bind_text(@stmt, index, +value, FFI.rstring_lenint(value), FFI::CApi::SQLITE_TRANSIENT)
         end
       when Float
         status = FFI::CApi.sqlite3_bind_double(@stmt, index, value)
@@ -268,7 +278,7 @@ module SQLite3
     end
 
     def require_live_db
-      if @db.instance_variable_get(:@discarded)
+      if @db_ctx.discarded
         raise SQLite3::Exception, "cannot use a statement associated with a discarded database"
       end
     end

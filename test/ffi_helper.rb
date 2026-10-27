@@ -14,6 +14,16 @@ module SQLite3::FFI::TestCase
       skip_tests << "SQLite3::TestCollation#test_replacing_a_collation_releases_the_previous_comparator"
     end
 
+    # specific to C extension
+    skip_tests << "SQLite3::TestDatabase#test_typed_data_struct_name"
+    skip_tests << "SQLite3::TestStatement#test_typed_data_struct_name"
+    skip_tests << "SQLite3::TestStatement#test_step_does_not_allocate_when_done"
+
+    # slow
+    if i_am_running_in_valgrind
+      skip_tests << "IntegrationStatementTestCase#test_statement_timeout_of_zero_disables_the_timeout"
+    end
+
     skip if skip_tests.include?("#{self.class.name}##{name}")
 
     super

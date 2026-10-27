@@ -1,5 +1,21 @@
 module SQLite3
   module FFI
+    Context =
+      Struct.new(
+        :db,
+        :busy_handler,
+        :functions,
+        :collations,
+        :aggregators,
+        :trace_handler,
+        :authorizer,
+        :stmt_timeout,
+        :stmt_deadline,
+        :owner,
+        :readonly,
+        :discarded
+      )
+
     def self.sqlite3val2rb(val)
       case CApi.sqlite3_value_type(val)
       when CApi::SQLITE_INTEGER
@@ -29,9 +45,9 @@ module SQLite3
         CApi.sqlite3_result_double(ctx, result)
       when String
         if result.is_a?(Blob) || result.encoding == Encoding::BINARY
-          CApi.sqlite3_result_blob(ctx, result, result.bytesize, CApi::SQLITE_TRANSIENT)
+          CApi.sqlite3_result_blob(ctx, result, rstring_lenint(result), CApi::SQLITE_TRANSIENT)
         else
-          CApi.sqlite3_result_text(ctx, result, result.bytesize, CApi::SQLITE_TRANSIENT)
+          CApi.sqlite3_result_text(ctx, result, rstring_lenint(result), CApi::SQLITE_TRANSIENT)
         end
       else
         raise RuntimeError, "can't return #{result.class.name}"
@@ -68,6 +84,16 @@ module SQLite3
         raise ArgumentError, "string contains null byte"
       end
       obj
+    end
+
+    INT_MAX = 2**31 - 1
+
+    def self.rstring_lenint(obj)
+      n = obj.bytesize
+      if n > INT_MAX
+        raise RangeError, "integer %p too big to convert to int" % [n]
+      end
+      n
     end
 
     RB_ERRINFO = :sqlite3_ffi_rb_errinfo
