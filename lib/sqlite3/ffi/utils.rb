@@ -96,16 +96,6 @@ module SQLite3
       n
     end
 
-    RB_ERRINFO = :sqlite3_ffi_rb_errinfo
-
-    def self.rb_errinfo
-      Thread.current[RB_ERRINFO]
-    end
-
-    def self.rb_errinfo=(e)
-      Thread.current[RB_ERRINFO] = e
-    end
-
     OBJECT_REGISTRY = ObjectSpace::WeakMap.new
 
     def self.wrap(obj)

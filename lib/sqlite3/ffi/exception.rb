@@ -162,8 +162,6 @@ module SQLite3
 
       if frame
         frame.state = state
-      elsif state
-        self.rb_errinfo = nil
       end
 
       [result, failed]
