@@ -11,7 +11,11 @@ module SQLite3::FFI::TestCase
     # can use JRUBY_OPTS=-X+O to enable ObjectSpace.each_object, but behavior differs
     if RUBY_ENGINE == "jruby"
       skip_tests << "IntegrationAggregateTestCase#test_aggregate_instances_are_released_after_each_query"
+      skip_tests << "IntegrationAggregateTestCase#test_aggregate_instance_is_released_after_a_query_over_no_rows"
+      skip_tests << "IntegrationAggregateTestCase#test_aggregate_instance_is_released_after_an_exception_in_step"
+      skip_tests << "IntegrationAggregateTestCase#test_aggregate_instance_is_released_after_an_interrupt"
       skip_tests << "SQLite3::TestCollation#test_replacing_a_collation_releases_the_previous_comparator"
+      skip_tests << "SQLite3::TestCollation#test_replacing_a_collation_by_another_case_releases_the_previous_comparator"
     end
 
     # specific to C extension
