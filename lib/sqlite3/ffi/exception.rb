@@ -149,8 +149,8 @@ module SQLite3
       state = nil
 
       if frame && frame.state
-        _failed = true
-        return nil
+        failed = true
+        return [nil, failed]
       end
 
       begin
@@ -158,7 +158,7 @@ module SQLite3
       rescue => e
         state = e
       end
-      _failed = !state.nil?
+      failed = !state.nil?
 
       if frame
         frame.state = state
@@ -166,7 +166,7 @@ module SQLite3
         self.rb_errinfo = nil
       end
 
-      result
+      [result, failed]
     end
   end
 end
